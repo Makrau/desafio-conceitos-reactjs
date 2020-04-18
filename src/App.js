@@ -1,10 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
+import api from './services/api';
 
 import "./styles.css";
 
+const techs = ['ReactJS', 'NodeJS', 'React Native', 'Ruby on Rails', 'Python'];
+const getRandomTech = () => techs[Math.floor(Math.random() * techs.length)];
+const buildNewRepository = () => {
+  const repository = {
+    title: `Novo projeto ${Date.now()}`,
+    url: 'https://urldeexemplo.com.br',
+    techs: [getRandomTech(), getRandomTech()],
+  };
+
+  return repository;
+};
+
 function App() {
+  const [repositories, setRepositories] = useState([]);
+
+  useEffect(() => {
+    api.get('repositories').then(({ data }) => {
+      setRepositories(data);
+    });
+  }, []);
+
   async function handleAddRepository() {
-    // TODO
+    const repository = buildNewRepository();
+    const response = await api.post('repositories', repository);
+    setRepositories([...repositories, response.data]);
   }
 
   async function handleRemoveRepository(id) {
@@ -14,13 +37,14 @@ function App() {
   return (
     <div>
       <ul data-testid="repository-list">
-        <li>
-          Repositório 1
-
-          <button onClick={() => handleRemoveRepository(1)}>
-            Remover
-          </button>
-        </li>
+      {repositories.map((repository) => (
+          <li key={repository.id}>
+            {repository.title}
+            <button onClick={() => handleRemoveRepository(repository.id)}>
+              Remover
+            </button>
+          </li>
+        ))}
       </ul>
 
       <button onClick={handleAddRepository}>Adicionar</button>
